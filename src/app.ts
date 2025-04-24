@@ -1,31 +1,34 @@
 // For more information about this file see https://dove.feathersjs.com/guides/cli/application.html
-import { feathers } from '@feathersjs/feathers'
-import configuration from '@feathersjs/configuration'
-import { koa, rest, bodyParser, errorHandler, parseAuthentication, cors, serveStatic } from '@feathersjs/koa'
-import socketio from '@feathersjs/socketio'
+import { feathers } from '@feathersjs/feathers';
+import configuration from '@feathersjs/configuration';
+import { koa, rest, bodyParser, errorHandler, parseAuthentication, cors, serveStatic } from '@feathersjs/koa';
+import socketio from '@feathersjs/socketio';
 
-import { configurationValidator } from './configuration'
-import type { Application } from './declarations'
-import { logError } from './hooks/log-error'
-import { sqlite } from './sqlite'
-import { services } from './services/index'
-import { channels } from './channels'
-import knex from 'knex'
+import { configurationValidator } from './configuration';
+import type { Application } from './declarations';
+import { logError } from './hooks/log-error';
+import { services } from './services/index';
+import { channels } from './channels';
+import { knex } from 'knex';
 
 const app: Application = koa(feathers());
 
 // Load our app configuration (see config/ folder)
-app.configure(configuration(configurationValidator))
+app.configure(configuration(configurationValidator));
 
-const db = knex({
-  client: 'sqlite3',
+interface MysqlConfig {
+  client: string;
   connection: {
-    filename: 'feathers-test.sqlite'
-  },
-  useNullAsDefault: true
-})
+    host: string;
+    user: string;
+    password: string;
+    database: string;
+  };
+}
 
-app.set('sqliteClient', db)
+const db = knex(app.get('knex') as MysqlConfig);
+
+app.set('knexClient', db);
 // Set up Koa middleware
 app.use(cors())
 app.use(serveStatic(app.get('public')))
@@ -41,10 +44,10 @@ app.configure(
       origin: app.get('origins')
     }
   })
-)
-app.configure(sqlite)
-app.configure(services)
-app.configure(channels)
+);
+
+app.configure(services);
+app.configure(channels);
 
 // Register hooks that run on all service methods
 app.hooks({

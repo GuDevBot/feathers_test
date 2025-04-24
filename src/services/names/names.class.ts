@@ -21,7 +21,7 @@ export class NamesService<ServiceParams extends Params = NamesParams> extends Kn
 export const getOptions = (app: Application): KnexAdapterOptions => {
   return {
     paginate: app.get('paginate'),
-    Model: app.get('sqliteClient'),
+    Model: app.get('knexClient'),
     name: 'names'
   }
 }
